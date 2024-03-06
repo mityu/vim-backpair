@@ -1,0 +1,117 @@
+*backpair.vim*		Go back to the inner position of the inputted pair.
+
+Author: mityu
+License: MIT License
+
+==============================================================================
+CONTENTS						*backpair-contents*
+
+INTRODUCTION						|backpair-introduction|
+FUNCTIONS						|backpair-functions|
+AUTOCOMMANDS						|backpair-autocmds|
+
+
+==============================================================================
+INTRODUCTION					*backpair-introduction*
+
+|backpair.vim| is a plugin to help inserting pair then returning back to the
+inner position of the pair such as `()`, `[]`, `<>`, `""`, etc.  For examples,
+if you configure well, you can move like these:
+
+			    Type )
+	()|		------------->		(|)
+
+			    Type )
+	\%(\)|		------------->		\%(|\)
+
+			    Type ]
+	[[]]|		------------->		[[|]]
+
+
+Note that this plugin does NOT provide any configuration and you need to write
+some configurations in your .vimrc so that this plugin works well.  See
+|backpair-functions| and |backpair-autocmds| for the available functions and
+autocommands, and see |backpair-examples| for the example configurations.
+
+==============================================================================
+FUNCTIONS					*backpair-functions*
+
+backpair#add_pair({opener}, {closer})		*backpair#add_pair()*
+	Register a pair.  {opener} and {closer} is a |String| with one
+	character at least.  If you type {opener}, {closer} and the last
+	character of {closer} sequentially in insert mode, this plugin reverts
+	the type of the last character of {closer} and move the cursor to the
+	position between {opener} and {closer}.
+
+	Examples:
+	- `call backpair#add_pair("[", "]")`:
+
+			Buffer~
+		-----------------------
+			|
+	   Type [
+	----------->	[|
+	   Type ]
+	----------->	[]|
+	   Type ]
+	----------->	[|]
+
+
+	- `call backpair#add_pair("\(", "\)")`:
+
+			Buffer~
+		-----------------------
+			|
+	   Type \
+	----------->	\|
+	   Type (
+	----------->	\(|
+	   Type \
+	----------->	\(\|
+	   Type )
+	----------->	\(\)|
+	   Type )
+	----------->	\(|\)
+
+backpair#clear_pairs()				*backpair#clear_pairs()*
+	Clear all the registered pairs.
+
+backpair#enable()					*backpair#enable()*
+	Enables |backpair.vim| plugin.
+
+backpair#disable()					*backpair#disable()*
+	Disables |backpair.vim| plugin.
+
+==============================================================================
+AUTOCOMMANDS					*backpair-autocmds*
+
+|backpair.vim| provides a |User| autocommand to do initial configurations.
+
+backpair-initialize			*backpair-User-backpair-initialize*
+	On the first load of |backpair.vim|.  You can do some plugin
+	configurations such as to call |backpair#add_pair()|.
+
+
+==============================================================================
+EXAMPLES					*backpair-examples*
+
+- Setup this plugin: >
+	augroup setup-plugin-backpair
+	  autocmd!
+	  autocmd InsertEnter * ++once call backpair#enable()
+	  autocmd User backpair-initialize ++once call s:backpair_config()
+	augroup END
+
+	function s:backpair_config() abort
+	  call backpair#add_pair('(', ')')
+	  call backpair#add_pair('[', ']')
+	  call backpair#add_pair('<', '>')
+	  call backpair#add_pair('"', '"')
+	  call backpair#add_pair("'", "'")
+	  call backpair#add_pair('「', '」')
+	endfunction
+<
+
+
+==============================================================================
+vim:tw=78:fo=tcq2mM:ts=8:ft=help:norl

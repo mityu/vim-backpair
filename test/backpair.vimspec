@@ -1,0 +1,186 @@
+scriptencoding utf-8
+let s:fn = themis#helper('scope').funcs('autoload/backpair.vim')
+
+function s:getcurpos() abort
+  return getcurpos()[1 : 2]
+endfunction
+
+Describe backpair#clear_pairs()
+  Before all
+    let vars = s:fn.script_vars()
+  End
+
+  After all
+    let vars.rules = {}
+    unlet vars
+  End
+
+  It clears rule.
+    let vars.rules = {'(': {')': {')': 1}}}
+    call g:assert.not_empty(s:fn.script_vars().rules)
+    call backpair#clear_pairs()
+    call g:assert.empty(s:fn.script_vars().rules)
+  End
+
+End
+
+Describe backpair#add_pair()
+  Before all
+    let Vars = s:fn.script_vars
+  End
+
+  After all
+    call backpair#clear_pairs()
+    unlet Vars
+  End
+
+  Before each
+    call backpair#clear_pairs()
+  End
+
+  It adds one rule.
+    call backpair#add_pair('(', ')')
+    Assert Equals(Vars().rules, {'(': {')': {')': 1}}})
+  End
+
+  It adds some rules.
+    call backpair#add_pair('(', ')')
+    call backpair#add_pair('<', '>')
+    Assert Equals(Vars().rules, {'(': {')': {')': 1}}, '<': {'>': {'>': 1}}})
+  End
+
+  It overwrites an existing rule.
+    call backpair#add_pair('(', '))')
+    call backpair#add_pair('(', ')')
+    Assert Equals(Vars().rules, {'(': {')': {')': 1}}})
+  End
+
+  It accepts multiple length pair.
+    const expected = {'\': {'(': {'\': {')': {')': 2}}}}}
+    call backpair#add_pair('\(', '\)')
+    Assert Equals(Vars().rules, expected)
+  End
+
+  It accepts multibyte character.
+    call backpair#add_pair('「', '」')
+    Assert Equals(Vars().rules, {'「': {'」': {'」': 1}}})
+
+    call backpair#clear_pairs()
+
+    const expected = {'「': {'「': {'」': {'」': 1}}}}
+    call backpair#add_pair('「「', '」')
+    Assert Equals(Vars().rules, expected)
+  End
+
+  It doesn't accept rules with empty closing pair.
+    call backpair#add_pair('*', '')
+    Assert Empty(Vars().rules)
+  End
+
+End
+
+Describe backpair.vim
+  After all
+    call backpair#clear_pairs()
+  End
+
+  Before each
+    %bwipeout!
+    call backpair#clear_pairs()
+
+    " Restart plugin
+    call backpair#disable()
+    call backpair#enable()
+  End
+
+  It applies a rule in one rule.
+    call backpair#add_pair('(', ')')
+    call NewScripter()
+      \.feedkeys('i()')
+      \.call({-> g:assert.equals(getline('.'), '()')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 3])})
+      \.feedkeys(')')
+      \.call({-> g:assert.equals(getline('.'), '()')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 2])})
+      \.feedkeys('<ESC>')
+      \.run()
+  End
+
+  It applies a quote rule.
+    call backpair#add_pair('"', '"')
+    call setline(1, '"')
+    call NewScripter()
+      \.feedkeys('A"')
+      \.call({-> g:assert.equals(getline('.'), '""')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 3])})
+      \.feedkeys('"')
+      \.call({-> g:assert.equals(getline('.'), '"""')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 4])})
+      \.feedkeys('"')
+      \.call({-> g:assert.equals(getline('.'), '"""')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 3])})
+      \.feedkeys('<ESC>')
+      \.run()
+  End
+
+  It applies a multi-length rule.
+    call backpair#add_pair('\(', '\)')
+    call NewScripter()
+      \.feedkeys('i\(\)')
+      \.call({-> g:assert.equals(getline('.'), '\(\)')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 5])})
+      \.feedkeys(')')
+      \.call({-> g:assert.equals(getline('.'), '\(\)')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 3])})
+      \.feedkeys('<ESC>')
+      \.run()
+  End
+
+  It doesn't apply rules when cursor is moved.
+    call backpair#add_pair('<', '>')
+    call NewScripter()
+      \.feedkeys('i<><left>>')
+      \.call({-> g:assert.equals(getline('.'), '<>>')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 3])})
+      \.feedkeys('<ESC>')
+      \.run()
+  End
+
+  It doesn't apply rules when character deletion happens.
+    call backpair#add_pair('<', '>')
+    call NewScripter()
+      \.feedkeys('i<><C-h>>>')
+      \.call({-> g:assert.equals(getline('.'), '<>>')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 4])})
+      \.feedkeys('<ESC>')
+      \.run()
+  End
+
+  It applies a rule in multiple rules.
+    call backpair#add_pair('(', ')')
+    call backpair#add_pair('\(', '\)')
+    call NewScripter()
+      \.feedkeys('i\(\))')
+      \.call({-> g:assert.equals(getline('.'), '\(\)')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 3])})
+      \.feedkeys('<ESC>')
+      \.run()
+    call NewScripter()
+      \.feedkeys('o\())')
+      \.call({-> g:assert.equals(getline('.'), '\()')})
+      \.call({-> g:assert.equals(s:getcurpos(), [2, 3])})
+      \.feedkeys('<ESC>')
+      \.run()
+  End
+
+  It supports multibyte characters.
+    call backpair#add_pair('「', '」')
+    call NewScripter()
+      \.feedkeys('i「」」')
+      \.call({-> g:assert.equals(getline('.'), '「」')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, strlen('「') + 1])})
+      \.feedkeys('<ESC>')
+      \.run()
+  End
+
+End

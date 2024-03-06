@@ -1,0 +1,14 @@
+call themis#option('reporter', 'dot')
+call themis#log(execute('version'))
+call themis#log('compaible: ' . &compatible)
+call themis#log('cpoptions: ' . &cpoptions)
+call themis#log('sourced helpers:')
+for s:f in split(glob(expand('<sfile>:h') . '/helper/*.vim'), "\n")
+  call themis#log('  ' . s:f)
+  source `=s:f`
+endfor
+unlet s:f
+
+let g:assert = themis#helper('assert')
+call themis#helper('command').with(g:assert)
+call themis#func_alias(g:assert)
