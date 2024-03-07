@@ -58,7 +58,6 @@ function s:onInsertCharPre() abort
   if !empty(s:context) && s:context.curpos != getpos('.')
     let s:context = {}
     let s:applicant_stack = []
-    return
   endif
 
   let line = getline('.')->strpart(0, col('.') - 1)

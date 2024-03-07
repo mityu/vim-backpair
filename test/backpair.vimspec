@@ -136,6 +136,16 @@ Describe backpair.vim
       \.run()
   End
 
+  It applies a rule on newline.
+    call backpair#add_pair('<', '>')
+    call NewScripter()
+      \.feedkeys('i<><CR><>>')
+      \.call({-> g:assert.equals(getline('.'), '<>')})
+      \.call({-> g:assert.equals(s:getcurpos(), [2, 2])})
+      \.feedkeys('<ESC>')
+      \.run()
+  End
+
   It doesn't apply rules when cursor is moved.
     call backpair#add_pair('<', '>')
     call NewScripter()
