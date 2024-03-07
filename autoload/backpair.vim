@@ -2,7 +2,7 @@ let s:rules = {}
 let s:applicant_stack = []
 let s:context = {}
 
-function backpair#add_pair(opener, closer) abort
+function backpair#add_pair(opener, closer, opts = {}) abort
   if a:closer ==# ''
     call s:print_error('Closing pair must not be empty: opener: ' . string(a:opener))
     return
@@ -18,7 +18,7 @@ function backpair#add_pair(opener, closer) abort
     endif
     let tree = tree[c]
   endfor
-  let tree[input[-1]] = backlen
+  let tree[input[-1]] = {'backlen': backlen, 'opts': a:opts}
 endfunction
 
 function backpair#clear_pairs() abort
@@ -54,6 +54,18 @@ function s:has_suffix(str, suf) abort
   return a:str->strpart(strlen(a:str) - strlen(a:suf)) ==# a:suf
 endfunction
 
+function s:check_availability(opts) abort
+  if get(a:opts, 'enable_filetypes', [&l:filetype])->index(&l:filetype) == -1
+    return v:false
+  elseif get(a:opts, 'disable_filetypes', [])->index(&l:filetype) != -1
+    return v:false
+  elseif !get(a:opts, 'condition', {-> v:true})->call([])
+    return v:false
+  else
+    return v:true
+  endif
+endfunction
+
 function s:onInsertCharPre() abort
   if !empty(s:context) && s:context.curpos != getpos('.')
     let s:context = {}
@@ -73,9 +85,12 @@ function s:onInsertCharPre() abort
 
   " Check if there're any appliable rules.
   for rule in s:applicant_stack
-    if type(rule[0]) ==# v:t_number  " Appliable rule is found.
+    if has_key(rule[0], 'backlen')  " Appliable rule is found.
+      if !s:check_availability(rule[0].opts)
+        continue
+      endif
       let v:char = ''
-      call feedkeys(repeat("\<C-g>U\<left>", rule[0]), 'ni')
+      call feedkeys(repeat("\<C-g>U\<left>", rule[0].backlen), 'ni')
       let s:applicant_stack = []
       let s:context = {}
       return

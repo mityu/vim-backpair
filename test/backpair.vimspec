@@ -16,7 +16,7 @@ Describe backpair#clear_pairs()
   End
 
   It clears rule.
-    let vars.rules = {'(': {')': {')': 1}}}
+    let vars.rules = {'(': {')': {')': {'backlen': 1, 'opts': {}}}}}
     call g:assert.not_empty(s:fn.script_vars().rules)
     call backpair#clear_pairs()
     call g:assert.empty(s:fn.script_vars().rules)
@@ -40,34 +40,34 @@ Describe backpair#add_pair()
 
   It adds one rule.
     call backpair#add_pair('(', ')')
-    Assert Equals(Vars().rules, {'(': {')': {')': 1}}})
+    Assert Equals(Vars().rules, {'(': {')': {')': {'backlen': 1, 'opts': {}}}}})
   End
 
   It adds some rules.
     call backpair#add_pair('(', ')')
     call backpair#add_pair('<', '>')
-    Assert Equals(Vars().rules, {'(': {')': {')': 1}}, '<': {'>': {'>': 1}}})
+    Assert Equals(Vars().rules, {'(': {')': {')': {'backlen': 1, 'opts': {}}}}, '<': {'>': {'>': {'backlen': 1, 'opts': {}}}}})
   End
 
   It overwrites an existing rule.
     call backpair#add_pair('(', '))')
     call backpair#add_pair('(', ')')
-    Assert Equals(Vars().rules, {'(': {')': {')': 1}}})
+    Assert Equals(Vars().rules, {'(': {')': {')': {'backlen': 1, 'opts': {}}}}})
   End
 
   It accepts multiple length pair.
-    const expected = {'\': {'(': {'\': {')': {')': 2}}}}}
+    const expected = {'\': {'(': {'\': {')': {')': {'backlen': 2, 'opts': {}}}}}}}
     call backpair#add_pair('\(', '\)')
     Assert Equals(Vars().rules, expected)
   End
 
   It accepts multibyte character.
     call backpair#add_pair('「', '」')
-    Assert Equals(Vars().rules, {'「': {'」': {'」': 1}}})
+    Assert Equals(Vars().rules, {'「': {'」': {'」': {'backlen': 1, 'opts': {}}}}})
 
     call backpair#clear_pairs()
 
-    const expected = {'「': {'「': {'」': {'」': 1}}}}
+    const expected = {'「': {'「': {'」': {'」': {'backlen': 1, 'opts': {}}}}}}
     call backpair#add_pair('「「', '」')
     Assert Equals(Vars().rules, expected)
   End
@@ -75,6 +75,17 @@ Describe backpair#add_pair()
   It doesn't accept rules with empty closing pair.
     call backpair#add_pair('*', '')
     Assert Empty(Vars().rules)
+  End
+
+  It accepts rules with {opts}.
+    let opts = {
+      \ 'enable_filetypes': ['vim', 'lua'],
+      \ 'disable_filetypes': ['c', 'cpp'],
+      \ 'condition': {-> v:false},
+      \}
+    call backpair#add_pair('<', '>', opts)
+    call backpair#add_pair('(', ')')
+    Assert Equals(Vars().rules, {'(': {')': {')': {'backlen': 1, 'opts': {}}}}, '<': {'>': {'>': {'backlen': 1, 'opts': opts}}}})
   End
 
 End
@@ -189,6 +200,137 @@ Describe backpair.vim
       \.feedkeys('i「」」')
       \.call({-> g:assert.equals(getline('.'), '「」')})
       \.call({-> g:assert.equals(s:getcurpos(), [1, strlen('「') + 1])})
+      \.feedkeys('<ESC>')
+      \.run()
+  End
+
+  It only enables a rule for the filetype that {opts}.enable_filetypes has.
+    call backpair#add_pair('<', '>', {'enable_filetypes': ['vim', 'c']})
+    call NewScripter()
+      \.feedkeys('i<>>')
+      \.call({-> g:assert.equals(getline('.'), '<>>')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 4])})
+      \.feedkeys('<ESC>')
+      \.run()
+
+    %delete _
+    set filetype=vim
+    call NewScripter()
+      \.feedkeys('i<>>')
+      \.call({-> g:assert.equals(getline('.'), '<>')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 2])})
+      \.feedkeys('<ESC>')
+      \.run()
+
+    %delete _
+    set filetype=c
+    call NewScripter()
+      \.feedkeys('i<>>')
+      \.call({-> g:assert.equals(getline('.'), '<>')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 2])})
+      \.feedkeys('<ESC>')
+      \.run()
+  End
+
+  It disables a rule for the filetype that {opts}.disable_filetypes has.
+    call backpair#add_pair('<', '>', {'disable_filetypes': ['vim', 'c']})
+    call NewScripter()
+      \.feedkeys('i<>>')
+      \.call({-> g:assert.equals(getline('.'), '<>')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 2])})
+      \.feedkeys('<ESC>')
+      \.run()
+
+    %delete _
+    set filetype=vim
+    call NewScripter()
+      \.feedkeys('i<>>')
+      \.call({-> g:assert.equals(getline('.'), '<>>')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 4])})
+      \.feedkeys('<ESC>')
+      \.run()
+
+    %delete _
+    set filetype=c
+    call NewScripter()
+      \.feedkeys('i<>>')
+      \.call({-> g:assert.equals(getline('.'), '<>>')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 4])})
+      \.feedkeys('<ESC>')
+      \.run()
+  End
+
+  It disables a rule when {opts}.condition returns falsy value.
+    call backpair#add_pair('<', '>', {'condition': {-> line('.') == 2}})
+    call NewScripter()
+      \.feedkeys('i<>>')
+      \.call({-> g:assert.equals(getline('.'), '<>>')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 4])})
+      \.feedkeys('<CR><>>')
+      \.call({-> g:assert.equals(getline('.'), '<>')})
+      \.call({-> g:assert.equals(s:getcurpos(), [2, 2])})
+      \.feedkeys('<End><CR><>>')
+      \.call({-> g:assert.equals(getline('.'), '<>>')})
+      \.call({-> g:assert.equals(s:getcurpos(), [3, 4])})
+      \.feedkeys('<ESC>')
+      \.run()
+  End
+
+  It calls {opts}.condition before the latest input is applied for the buffer.
+    let line = 'initial-dummy-content'
+    function s:F() closure
+      let line = getline('.')
+      return v:false
+    endfunction
+
+    call backpair#add_pair('<', '>',
+      \ {'condition': funcref('s:F')})
+
+    call NewScripter()
+      \.feedkeys('i<>>')
+      \.call({-> g:assert.equals(getline('.'), '<>>')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 4])})
+      \.feedkeys('<ESC>')
+      \.run()
+
+    Assert Equals(line, '<>')
+    Assert Equals(getline('.'), '<>>')
+
+    delfunction s:F
+  End
+
+  It skips disabled rule(s) in same iteration.
+    call backpair#add_pair('[[', ']]', {'condition': {-> v:false}})
+    call backpair#add_pair('[]', ']')
+
+    call NewScripter()
+      \.feedkeys('i[[]]')
+      \.call({-> g:assert.equals(getline('.'), '[[]]')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 5])})
+      \.feedkeys(']')
+      \.call({-> g:assert.equals(getline('.'), '[[]]')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 4])})
+      \.feedkeys('<ESC>')
+      \.run()
+  End
+
+  It skips disabled rule(s) in next iteration.
+    call backpair#add_pair('[[', ']]', {'condition': {-> v:false}})
+    call backpair#add_pair('[', ']]]+')
+
+    call NewScripter()
+      \.feedkeys('i[[]]')
+      \.call({-> g:assert.equals(getline('.'), '[[]]')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 5])})
+      \.feedkeys(']')
+      \.call({-> g:assert.equals(getline('.'), '[[]]]')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 6])})
+      \.feedkeys('+')
+      \.call({-> g:assert.equals(getline('.'), '[[]]]+')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 7])})
+      \.feedkeys('+')
+      \.call({-> g:assert.equals(getline('.'), '[[]]]+')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 3])})
       \.feedkeys('<ESC>')
       \.run()
   End

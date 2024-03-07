@@ -36,12 +36,26 @@ autocommands, and see |backpair-examples| for the example configurations.
 ==============================================================================
 FUNCTIONS					*backpair-functions*
 
-backpair#add_pair({opener}, {closer})		*backpair#add_pair()*
+backpair#add_pair({opener}, {closer} [, {opts}])	*backpair#add_pair()*
 	Register a pair.  {opener} and {closer} is a |String| with one
 	character at least.  If you type {opener}, {closer} and the last
 	character of {closer} sequentially in insert mode, this plugin reverts
 	the type of the last character of {closer} and move the cursor to the
 	position between {opener} and {closer}.
+	{opts} is a |Dict| to specify some options to enable/disable the rule
+	dynamically.  The available keys are:
+	- enable_filetypes	(optional, |List| of |String|s)
+		If the current buffer's filetype doesn't appear in this list,
+		the rule will be disabled.
+	- disable_filetypes	(optional, |List| of |String|s)
+	  	If the current buffer's file type appears in this list, the
+		rule will be disabled.
+	- condition		(optional, |Funcref|)
+	  	This function should take no arguments and return boolean
+		comparable value.  If this function returns falsy value, the
+		rule will be disabled.  Note that this function will be
+		evaluated when after user typed the last character of {closer}
+		and before the typed character is inserted on buffer.
 
 	Examples:
 	- `call backpair#add_pair("[", "]")`:
