@@ -59,7 +59,7 @@ function s:check_availability(opts) abort
     return v:false
   elseif get(a:opts, 'disable_filetypes', [])->index(&l:filetype) != -1
     return v:false
-  elseif !get(a:opts, 'condition', {-> v:true})->call([])
+  elseif !(get(a:opts, 'condition', {-> v:true})->call([]))
     return v:false
   else
     return v:true
