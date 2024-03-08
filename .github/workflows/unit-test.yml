@@ -1,0 +1,43 @@
+name: Unit test runner
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      vim_type:
+        required: true
+        type: string
+      vim_version:
+        required: true
+        type: string
+      download:
+        required: false
+        type: string
+
+jobs:
+  run-unit-tests:
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Vim
+        id: vim
+        uses: thinca/action-setup-vim@v2
+        with:
+          vim_type: ${{ inputs.vim_type }}
+          vim_version: ${{ inputs.vim_version }}
+          download: ${{ inputs.download }}
+      - name: Show Vim version
+        run: |
+          ${{ steps.vim.outputs.executable }} --version
+      - name: Setup themis.vim
+        uses: actions/checkout@v4
+        with:
+          repository: thinca/vim-themis
+          path: themis
+      - name: Run test
+        env:
+          THEMIS_VIM: ${{ steps.vim.outputs.executable }}
+        run: |
+          ./themis/bin/themis --reporter tap
