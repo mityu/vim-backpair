@@ -7,8 +7,10 @@ License: MIT License
 CONTENTS						*backpair-contents*
 
 INTRODUCTION						|backpair-introduction|
+REQUIREMENTS						|backpair-requirements|
 FUNCTIONS						|backpair-functions|
 AUTOCOMMANDS						|backpair-autocmds|
+EXAMPLES						|backpair-examples|
 
 
 ==============================================================================
@@ -32,6 +34,12 @@ Note that this plugin does NOT provide any configuration and you need to write
 some configurations in your .vimrc so that this plugin works well.  See
 |backpair-functions| and |backpair-autocmds| for the available functions and
 autocommands, and see |backpair-examples| for the example configurations.
+
+==============================================================================
+REQUIREMENTS					*backpair-requirements*
+
+- Vim 8.2 or later
+- Neovim 0.7.0 or later
 
 ==============================================================================
 FUNCTIONS					*backpair-functions*
