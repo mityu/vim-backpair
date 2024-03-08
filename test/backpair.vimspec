@@ -1,8 +1,13 @@
 scriptencoding utf-8
 let s:fn = themis#helper('scope').funcs('autoload/backpair.vim')
+let s:scripter = themis#helper('scripter')
 
 function s:getcurpos() abort
   return getcurpos()[1 : 2]
+endfunction
+
+function s:new_scripter() abort
+  return s:scripter.new().set_auto_replace_termcodes(1)
 endfunction
 
 Describe backpair#clear_pairs()
@@ -106,7 +111,7 @@ Describe backpair.vim
 
   It applies a rule in one rule.
     call backpair#add_pair('(', ')')
-    call NewScripter()
+    call s:new_scripter()
       \.feedkeys('i()')
       \.call({-> g:assert.equals(getline('.'), '()')})
       \.call({-> g:assert.equals(s:getcurpos(), [1, 3])})
@@ -120,7 +125,7 @@ Describe backpair.vim
   It applies a quote rule.
     call backpair#add_pair('"', '"')
     call setline(1, '"')
-    call NewScripter()
+    call s:new_scripter()
       \.feedkeys('A"')
       \.call({-> g:assert.equals(getline('.'), '""')})
       \.call({-> g:assert.equals(s:getcurpos(), [1, 3])})
@@ -136,7 +141,7 @@ Describe backpair.vim
 
   It applies a multi-length rule.
     call backpair#add_pair('\(', '\)')
-    call NewScripter()
+    call s:new_scripter()
       \.feedkeys('i\(\)')
       \.call({-> g:assert.equals(getline('.'), '\(\)')})
       \.call({-> g:assert.equals(s:getcurpos(), [1, 5])})
@@ -149,7 +154,7 @@ Describe backpair.vim
 
   It applies a rule on newline.
     call backpair#add_pair('<', '>')
-    call NewScripter()
+    call s:new_scripter()
       \.feedkeys('i<><CR><>>')
       \.call({-> g:assert.equals(getline('.'), '<>')})
       \.call({-> g:assert.equals(s:getcurpos(), [2, 2])})
@@ -159,7 +164,7 @@ Describe backpair.vim
 
   It doesn't apply rules when cursor is moved.
     call backpair#add_pair('<', '>')
-    call NewScripter()
+    call s:new_scripter()
       \.feedkeys('i<><left>>')
       \.call({-> g:assert.equals(getline('.'), '<>>')})
       \.call({-> g:assert.equals(s:getcurpos(), [1, 3])})
@@ -169,7 +174,7 @@ Describe backpair.vim
 
   It doesn't apply rules when character deletion happens.
     call backpair#add_pair('<', '>')
-    call NewScripter()
+    call s:new_scripter()
       \.feedkeys('i<><C-h>>>')
       \.call({-> g:assert.equals(getline('.'), '<>>')})
       \.call({-> g:assert.equals(s:getcurpos(), [1, 4])})
@@ -180,13 +185,13 @@ Describe backpair.vim
   It applies a rule in multiple rules.
     call backpair#add_pair('(', ')')
     call backpair#add_pair('\(', '\)')
-    call NewScripter()
+    call s:new_scripter()
       \.feedkeys('i\(\))')
       \.call({-> g:assert.equals(getline('.'), '\(\)')})
       \.call({-> g:assert.equals(s:getcurpos(), [1, 3])})
       \.feedkeys('<ESC>')
       \.run()
-    call NewScripter()
+    call s:new_scripter()
       \.feedkeys('o\())')
       \.call({-> g:assert.equals(getline('.'), '\()')})
       \.call({-> g:assert.equals(s:getcurpos(), [2, 3])})
@@ -196,7 +201,7 @@ Describe backpair.vim
 
   It supports multibyte characters.
     call backpair#add_pair('「', '」')
-    call NewScripter()
+    call s:new_scripter()
       \.feedkeys('i「」」')
       \.call({-> g:assert.equals(getline('.'), '「」')})
       \.call({-> g:assert.equals(s:getcurpos(), [1, strlen('「') + 1])})
@@ -206,7 +211,7 @@ Describe backpair.vim
 
   It only enables a rule for the filetype that {opts}.enable_filetypes has.
     call backpair#add_pair('<', '>', {'enable_filetypes': ['vim', 'c']})
-    call NewScripter()
+    call s:new_scripter()
       \.feedkeys('i<>>')
       \.call({-> g:assert.equals(getline('.'), '<>>')})
       \.call({-> g:assert.equals(s:getcurpos(), [1, 4])})
@@ -215,7 +220,7 @@ Describe backpair.vim
 
     %delete _
     set filetype=vim
-    call NewScripter()
+    call s:new_scripter()
       \.feedkeys('i<>>')
       \.call({-> g:assert.equals(getline('.'), '<>')})
       \.call({-> g:assert.equals(s:getcurpos(), [1, 2])})
@@ -224,7 +229,7 @@ Describe backpair.vim
 
     %delete _
     set filetype=c
-    call NewScripter()
+    call s:new_scripter()
       \.feedkeys('i<>>')
       \.call({-> g:assert.equals(getline('.'), '<>')})
       \.call({-> g:assert.equals(s:getcurpos(), [1, 2])})
@@ -234,7 +239,7 @@ Describe backpair.vim
 
   It disables a rule for the filetype that {opts}.disable_filetypes has.
     call backpair#add_pair('<', '>', {'disable_filetypes': ['vim', 'c']})
-    call NewScripter()
+    call s:new_scripter()
       \.feedkeys('i<>>')
       \.call({-> g:assert.equals(getline('.'), '<>')})
       \.call({-> g:assert.equals(s:getcurpos(), [1, 2])})
@@ -243,7 +248,7 @@ Describe backpair.vim
 
     %delete _
     set filetype=vim
-    call NewScripter()
+    call s:new_scripter()
       \.feedkeys('i<>>')
       \.call({-> g:assert.equals(getline('.'), '<>>')})
       \.call({-> g:assert.equals(s:getcurpos(), [1, 4])})
@@ -252,7 +257,7 @@ Describe backpair.vim
 
     %delete _
     set filetype=c
-    call NewScripter()
+    call s:new_scripter()
       \.feedkeys('i<>>')
       \.call({-> g:assert.equals(getline('.'), '<>>')})
       \.call({-> g:assert.equals(s:getcurpos(), [1, 4])})
@@ -262,7 +267,7 @@ Describe backpair.vim
 
   It disables a rule when {opts}.condition returns falsy value.
     call backpair#add_pair('<', '>', {'condition': {-> line('.') == 2}})
-    call NewScripter()
+    call s:new_scripter()
       \.feedkeys('i<>>')
       \.call({-> g:assert.equals(getline('.'), '<>>')})
       \.call({-> g:assert.equals(s:getcurpos(), [1, 4])})
@@ -286,7 +291,7 @@ Describe backpair.vim
     call backpair#add_pair('<', '>',
       \ {'condition': funcref('s:F')})
 
-    call NewScripter()
+    call s:new_scripter()
       \.feedkeys('i<>>')
       \.call({-> g:assert.equals(getline('.'), '<>>')})
       \.call({-> g:assert.equals(s:getcurpos(), [1, 4])})
@@ -303,7 +308,7 @@ Describe backpair.vim
     call backpair#add_pair('[[', ']]', {'condition': {-> v:false}})
     call backpair#add_pair('[]', ']')
 
-    call NewScripter()
+    call s:new_scripter()
       \.feedkeys('i[[]]')
       \.call({-> g:assert.equals(getline('.'), '[[]]')})
       \.call({-> g:assert.equals(s:getcurpos(), [1, 5])})
@@ -318,7 +323,7 @@ Describe backpair.vim
     call backpair#add_pair('[[', ']]', {'condition': {-> v:false}})
     call backpair#add_pair('[', ']]]+')
 
-    call NewScripter()
+    call s:new_scripter()
       \.feedkeys('i[[]]')
       \.call({-> g:assert.equals(getline('.'), '[[]]')})
       \.call({-> g:assert.equals(s:getcurpos(), [1, 5])})
