@@ -54,16 +54,23 @@ function s:has_suffix(str, suf) abort
   return a:str->strpart(strlen(a:str) - strlen(a:suf)) ==# a:suf
 endfunction
 
-function s:check_availability(opts) abort
+function s:check_availability(opts, ongoing_inputs) abort
   if get(a:opts, 'enable_filetypes', [&l:filetype])->index(&l:filetype) == -1
     return v:false
   elseif get(a:opts, 'disable_filetypes', [])->index(&l:filetype) != -1
     return v:false
   elseif !(get(a:opts, 'condition', {-> v:true})->call([]))
     return v:false
-  else
-    return v:true
   endif
+
+  let skip_if_ongoing = a:opts->get('skip_if_ongoing', [])
+  for v in skip_if_ongoing
+    if index(skip_if_ongoing, v) != -1
+      return v:false
+    endif
+  endfor
+
+  return v:true
 endfunction
 
 function s:onInsertCharPre() abort
@@ -84,9 +91,10 @@ function s:onInsertCharPre() abort
   endif
 
   " Check if there're any appliable rules.
+  let ongoing_inputs = s:applicant_stack->copy()->map({_, v -> v[1]})
   for rule in s:applicant_stack
     if has_key(rule[0], 'backlen')  " Appliable rule is found.
-      if !s:check_availability(rule[0].opts)
+      if !s:check_availability(rule[0].opts, ongoing_inputs)
         continue
       endif
       let v:char = ''
