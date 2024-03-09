@@ -56,10 +56,13 @@ backpair#add_pair({opener}, {closer} [, {opts}])	*backpair#add_pair()*
 		If the current buffer's filetype doesn't appear in this list,
 		the rule will be disabled.
 	- disable_filetypes	(optional, |List| of |String|s)
-	  	If the current buffer's file type appears in this list, the
+		If the current buffer's file type appears in this list, the
 		rule will be disabled.
+	- skip_if_ongoing	(optional, |List| of |String|s)
+		If one element of this value exists in a list of ongoing
+		rule's current input, the rule will be disabled.
 	- condition		(optional, |Funcref|)
-	  	This function should take no arguments and return boolean
+		This function should take no arguments and return boolean
 		comparable value.  If this function returns falsy value, the
 		rule will be disabled.  Note that this function will be
 		evaluated when after user typed the last character of {closer}
@@ -95,6 +98,18 @@ backpair#add_pair({opener}, {closer} [, {opts}])	*backpair#add_pair()*
 	   Type )
 	----------->	\(|\)
 
+	 `call backpair#add_pair("[", "]", #{skip_if_ongoing: ["[[]"]})`
+	 `call backpair#add_pair("[[", "]]")`
+
+			Buffer~
+		-----------------------
+			[[]|
+	   Type ]
+	----------->	[[]]|	<------ The first rule is skipped since "[[]"
+					matches the input for the second rule.
+	   Type ]
+	----------->	[[|]]	<------ The second rule is applied.
+
 backpair#clear_pairs()				*backpair#clear_pairs()*
 	Clear all the registered pairs.
 
@@ -126,7 +141,8 @@ EXAMPLES					*backpair-examples*
 
 	function s:backpair_config() abort
 	  call backpair#add_pair('(', ')')
-	  call backpair#add_pair('[', ']')
+	  call backpair#add_pair('[', ']', #{skip_if_ongoing: ['[[]']})
+	  call backpair#add_pair('[[', ']]')
 	  call backpair#add_pair('<', '>')
 	  call backpair#add_pair('"', '"')
 	  call backpair#add_pair("'", "'")

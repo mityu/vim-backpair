@@ -340,4 +340,19 @@ Describe backpair.vim
       \.run()
   End
 
+  It disables a rule when one of {opts}.skip_if_ongoing is in ongoing rules.
+    call backpair#add_pair('[[', ']]')
+    call backpair#add_pair('[', ']', {'skip_if_ongoing': ['[[]']})
+
+    call s:new_scripter()
+      \.feedkeys('i[[]]')
+      \.call({-> g:assert.equals(getline('.'), '[[]]')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 5])})
+      \.feedkeys(']')
+      \.call({-> g:assert.equals(getline('.'), '[[]]')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, 3])})
+      \.feedkeys('<ESC>')
+      \.run()
+  End
+
 End
