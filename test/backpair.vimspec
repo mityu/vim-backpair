@@ -351,6 +351,9 @@ Describe backpair.vim
       \.feedkeys(']')
       \.call({-> g:assert.equals(getline('.'), '[[]]')})
       \.call({-> g:assert.equals(s:getcurpos(), [1, 3])})
+      \.feedkeys('<End><CR>[]]')
+      \.call({-> g:assert.equals(getline('.'), '[]')})
+      \.call({-> g:assert.equals(s:getcurpos(), [2, 2])})
       \.feedkeys('<ESC>')
       \.run()
   End
