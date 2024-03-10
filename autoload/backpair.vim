@@ -65,7 +65,7 @@ function s:check_availability(opts, ongoing_inputs) abort
 
   let skip_if_ongoing = a:opts->get('skip_if_ongoing', [])
   for v in skip_if_ongoing
-    if index(skip_if_ongoing, v) != -1
+    if index(a:ongoing_inputs, v) != -1
       return v:false
     endif
   endfor
@@ -91,7 +91,8 @@ function s:onInsertCharPre() abort
   endif
 
   " Check if there're any appliable rules.
-  let ongoing_inputs = s:applicant_stack->copy()->map({_, v -> v[1]})
+  let ongoing_inputs = copy(s:applicant_stack)
+    \->map({_, v -> strpart(v[1], 0, strlen(v[1]) - 1)})
   for rule in s:applicant_stack
     if has_key(rule[0], 'backlen')  " Appliable rule is found.
       if !s:check_availability(rule[0].opts, ongoing_inputs)
