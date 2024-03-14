@@ -92,7 +92,7 @@ function s:onInsertCharPre() abort
 
   " Check if there're any appliable rules.
   let ongoing_inputs = copy(s:applicant_stack)
-    \->map({_, v -> strpart(v[1], 0, strlen(v[1]) - 1)})
+    \->map({_, v -> strpart(v[1], 0, strlen(v[1]) - strlen(v:char))})
   for rule in s:applicant_stack
     if has_key(rule[0], 'backlen')  " Appliable rule is found.
       if !s:check_availability(rule[0].opts, ongoing_inputs)

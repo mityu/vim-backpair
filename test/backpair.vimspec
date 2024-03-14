@@ -358,4 +358,22 @@ Describe backpair.vim
       \.run()
   End
 
+  It disables a rule when one of {opts}.skip_if_ongoing is in ongoing rules (with multibyte characters).
+    call backpair#add_pair('「「', '」」')
+    call backpair#add_pair('「', '」', {'skip_if_ongoing': ['「「」']})
+
+    call s:new_scripter()
+      \.feedkeys('i「「」」')
+      \.call({-> g:assert.equals(getline('.'), '「「」」')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, strlen('「「」」') + 1])})
+      \.feedkeys('」')
+      \.call({-> g:assert.equals(getline('.'), '「「」」')})
+      \.call({-> g:assert.equals(s:getcurpos(), [1, strlen('「「') + 1])})
+      \.feedkeys('<End><CR>「」」')
+      \.call({-> g:assert.equals(getline('.'), '「」')})
+      \.call({-> g:assert.equals(s:getcurpos(), [2, strlen('「') + 1])})
+      \.feedkeys('<ESC>')
+      \.run()
+  End
+
 End
