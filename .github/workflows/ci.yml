@@ -9,6 +9,7 @@ jobs:
   test-on-vim:
     name: Vim ${{ matrix.vim_version }} on ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os:
           - ubuntu-latest
@@ -29,7 +30,7 @@ jobs:
             vim_version: head
             download: never
 
-    uses: ./.github/workflows/unit-test.yml
+    uses: mityu/workflow-run-vim-themis/.github/workflows/run-themis.yml@v20240324
     with:
       vim_type: vim
       vim_version: ${{ matrix.vim_version }}
@@ -39,6 +40,7 @@ jobs:
   test-on-neovim:
     name: Neovim ${{ matrix.vim_version }} on ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os:
           - ubuntu-latest
@@ -60,7 +62,7 @@ jobs:
             vim_version: head
             download: never
 
-    uses: ./.github/workflows/unit-test.yml
+    uses: mityu/workflow-run-vim-themis/.github/workflows/run-themis.yml@v20240324
     with:
       vim_type: neovim
       vim_version: ${{ matrix.vim_version }}
