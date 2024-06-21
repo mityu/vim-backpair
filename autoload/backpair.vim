@@ -41,6 +41,11 @@ function backpair#disable() abort
   let s:context = {}
 endfunction
 
+function backpair#clear_state() abort
+  let s:applicant_stack = []
+  let s:context = {}
+endfunction
+
 function s:print_error(msg) abort
   let msg = a:msg->split("\n")->map({_, v -> '[backpair] ' . v})
   echohl Error
@@ -114,8 +119,7 @@ function s:onInsertCharPre() abort
 endfunction
 
 function s:onInsertLeave() abort
-  let s:applicant_stack = []
-  let s:context = {}
+  call backpair#clear_state()
 endfunction
 
 " Test helper function.
