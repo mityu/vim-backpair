@@ -119,6 +119,14 @@ backpair#enable()					*backpair#enable()*
 backpair#disable()					*backpair#disable()*
 	Disables |backpair.vim| plugin.
 
+backpair#clear_state()				*backpair#clear_state()*
+	Clear current internal state.  Useful to prohibit |backpair.vim|
+	plugin to trigger any rule that return cursor back to the inner
+	position of the latest pair on next type of a character.
+	Example: >
+	inoremap <C-f> <Cmd>call backpair#clear_state()<CR><C-g>U<right>
+<
+
 ==============================================================================
 AUTOCOMMANDS					*backpair-autocmds*
 

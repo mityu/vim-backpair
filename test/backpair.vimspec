@@ -376,4 +376,49 @@ Describe backpair.vim
       \.run()
   End
 
+  Context backpair#clear_state()
+    It skips the next rule application on next type of a character.
+      call backpair#add_pair('(', ')')
+      call s:new_scripter()
+        \.feedkeys('i()')
+        \.call({-> g:assert.equals(getline('.'), '()')})
+        \.call({-> g:assert.equals(s:getcurpos(), [1, 3])})
+        \.call({-> backpair#clear_state()})
+        \.feedkeys(')')
+        \.call({-> g:assert.equals(getline('.'), '())')})
+        \.call({-> g:assert.equals(s:getcurpos(), [1, 4])})
+        \.feedkeys('<ESC>')
+        \.run()
+    End
+
+    It skips the next rule application after some types of characters.
+      call backpair#add_pair('[[', ']]')
+      call s:new_scripter()
+        \.feedkeys('i[[]')
+        \.call({-> g:assert.equals(getline('.'), '[[]')})
+        \.call({-> g:assert.equals(s:getcurpos(), [1, 4])})
+        \.call({-> backpair#clear_state()})
+        \.feedkeys(']]')
+        \.call({-> g:assert.equals(getline('.'), '[[]]]')})
+        \.call({-> g:assert.equals(s:getcurpos(), [1, 6])})
+        \.feedkeys('<ESC>')
+        \.run()
+    End
+
+    It starts new key type observation.
+      call backpair#add_pair('(', ')')
+      call s:new_scripter()
+        \.feedkeys('i(')
+        \.call({-> g:assert.equals(getline('.'), '(')})
+        \.call({-> g:assert.equals(s:getcurpos(), [1, 2])})
+        \.call({-> backpair#clear_state()})
+        \.feedkeys('())')
+        \.call({-> g:assert.equals(getline('.'), '(()')})
+        \.call({-> g:assert.equals(s:getcurpos(), [1, 3])})
+        \.feedkeys('<ESC>')
+        \.run()
+    End
+
+  End
+
 End
